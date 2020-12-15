@@ -1,27 +1,110 @@
-'use strict';
+"use strict";
 
-module.exports = function (app) {
+const mongoose = require("mongoose");
+const mongooseHidden = require("mongoose-hidden")({
+    defaultHidden: { __v: true, password: true },
+  });
 
-  app.route('/api/issues/:project')
-  
-    .get(function (req, res){
+// Create a Schema for issue
+const { Schema } = mongoose;
+const IssueSchema = new Schema({
+  project: { type: String, required: true },
+  open: { type: Boolean, required: true, default: true },
+  issue_title: { type: String, required: true },
+  issue_text: { type: String, required: true },
+  created_by: { type: String, required: true },
+  assigned_to: { type: String, required: false, default: "" },
+  status_text: { type: String, required: false, default: "" },
+  created_on: { type: Object, required: false, default: new Date() },
+  updated_on: { type: Object, required: false, default: new Date() },
+  __v: { select: false },
+});
+
+// hides '__v' & 'password' fields
+IssueSchema.plugin(mongooseHidden);
+
+// Create the Model for issue
+const Issue = mongoose.model("Issues", IssueSchema);
+
+module.exports = (app) => {
+  app
+    .route("/api/issues/:project")
+
+    // GET issue:
+    .get(async (req, res) => {
+      console.log("_____")
       let project = req.params.project;
-      
+      console.log("get", req.params);
+      const projectIssues = await Issue.find({ project: project });
+      console.log(projectIssues);
+      res.json(projectIssues);
     })
-    
-    .post(function (req, res){
+
+    // POST submit issue:
+    .post((req, res) => {
+            console.log("_____")
       let project = req.params.project;
-      
+      // console.log("post", req.params);
+      // console.log("body", req.body);
+      const newIssue = {
+        project,
+        open: true,
+        issue_title: req.body.issue_title,
+        issue_text: req.body.issue_text,
+        created_by: req.body.created_by,
+        assigned_to: req.body.assigned_to,
+        status_text: req.body.status_text,
+        created_on: new Date(),
+        updated_on: new Date(),
+      };
+      const issue = new Issue(newIssue);
+      issue.save((error, result) => {
+        if (error) {
+          console.log("error: required field(s) missing");
+          res.json({ error: "required field(s) missing" });
+        } else {
+          let saved = result;
+          delete saved["__v"];
+          console.log("save:", saved);
+          res.json(result);
+        }
+      });
     })
-    
-    .put(function (req, res){
-      let project = req.params.project;
-      
+
+    .put((req, res) => {
+            console.log("_____")
+      const body = req.body;
+      let updateIssue = {};
+      Object.keys(body).forEach(function (item) {
+        if (body[item]) {
+          updateIssue[item] = body[item];
+        }
+      });
+      updateIssue.open = body.open == "true";
+      updateIssue.updated_on = new Date();
+      console.log("updateIssue:", updateIssue);
+      Issue.findByIdAndUpdate(body._id, updateIssue, (err, res) => {
+        if (err) console.log(err);
+        else console.log("Updated:", res);
+      });
     })
-    
-    .delete(function (req, res){
-      let project = req.params.project;
-      
+
+    .delete((req, res) => {
+            console.log("_____")
+      console.log("delete", req.body);
+      if (!req.body._id) {
+        console.log("error: 'missing _id'");
+        res.json({ error: "missing _id" });
+      } else {
+        Issue.findByIdAndDelete(req.body._id, (err, result) => {
+          if (err) {
+            console.log("error: 'missing _id'");
+            res.json({ error: "missing _id" });
+          } else {
+            console.log(`result: "successfully deleted"`, `"_id": ${req.body._id}`);
+            res.json({ result: "successfully deleted", _id: req.body._id });
+          }
+        });
+      }
     });
-    
 };

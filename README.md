@@ -1,8 +1,8 @@
 # [Issue Tracker](https://www.freecodecamp.org/learn/quality-assurance/quality-assurance-projects/issue-tracker)
 
-Repl.it: 
-Stie: 
-GitHub:
+Repl.it: https://repl.it/@LazaroFilm/fCC-project-issuetracker
+Stie: https://fcc-project-issuetracker.lazarofilm.repl.co/
+GitHub: https://github.com/LazaroFilm/fCC-project-issuetracker
 _____
 - [ ] Complete the necessary routes in `/routes/api.js`
 - [ ] Create all of the functional tests in `tests/2_functional-tests.js`
