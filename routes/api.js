@@ -33,9 +33,11 @@ module.exports = (app) => {
     // GET issue:
     .get(async (req, res) => {
       console.log("_____")
+      console.log("query:", req.query)
       let project = req.params.project;
       console.log("get", req.params);
-      const projectIssues = await Issue.find({ project: project });
+      console.log({ project: project, ...req.query })
+      const projectIssues = await Issue.find({ project: project, ...req.query });
       console.log(projectIssues);
       res.json(projectIssues);
     })
@@ -71,6 +73,7 @@ module.exports = (app) => {
       });
     })
 
+    // Update issue
     .put((req, res) => {
             console.log("_____")
       const body = req.body;
@@ -83,12 +86,17 @@ module.exports = (app) => {
       updateIssue.open = body.open == "true";
       updateIssue.updated_on = new Date();
       console.log("updateIssue:", updateIssue);
-      Issue.findByIdAndUpdate(body._id, updateIssue, (err, res) => {
-        if (err) console.log(err);
-        else console.log("Updated:", res);
+      Issue.findByIdAndUpdate(body._id, updateIssue, (error, result) => {
+        if (error) console.log(error);
+        else {
+          console.log("Updated:", res);
+          console.log(`result: 'successfully updated'`, `'_id': ${_id }`)
+          res.json({  result: 'successfully updated', '_id': req.body._id })
+        };
       });
     })
 
+    // Delete issue
     .delete((req, res) => {
             console.log("_____")
       console.log("delete", req.body);
@@ -102,7 +110,7 @@ module.exports = (app) => {
             res.json({ error: "missing _id" });
           } else {
             console.log(`result: "successfully deleted"`, `"_id": ${req.body._id}`);
-            res.json({ result: "successfully deleted", _id: req.body._id });
+            res.json({ result: "successfully deleted", "_id": req.body._id });
           }
         });
       }
