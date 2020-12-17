@@ -32,19 +32,22 @@ module.exports = (app) => {
 
     // GET issue:
     .get(async (req, res) => {
-      console.log("_____")
-      console.log("query:", req.query)
+      console.log("_____GET_____");
+      console.log("query:", req.query);
       let project = req.params.project;
       console.log("get", req.params);
-      console.log({ project: project, ...req.query })
-      const projectIssues = await Issue.find({ project: project, ...req.query });
+      // console.log({ project: project, ...req.query })
+      const projectIssues = await Issue.find({
+        project: project,
+        ...req.query,
+      });
       console.log(projectIssues);
       res.json(projectIssues);
     })
 
     // POST submit issue:
     .post((req, res) => {
-      console.log("_____")
+      console.log("_____POST_____");
       let project = req.params.project;
       // console.log("post", req.params);
       // console.log("body", req.body);
@@ -75,35 +78,51 @@ module.exports = (app) => {
 
     // Update issue
     .put((req, res) => {
-      console.log("_____")
-      if (req.body._id) {
-      const body = req.body;
-      let updateIssue = {};
-      Object.keys(body).forEach(function(item) {
-        if (body[item]) {
-          updateIssue[item] = body[item];
+      console.log("_____PUT_____");
+
+      try {
+        const body = req.body;
+        console.log(req.body)
+        if (!req.body._id) {
+          throw ("missing _id");
         }
-      });
-      updateIssue.open = body.open == "true";
-      updateIssue.updated_on = new Date();
-      console.log("updateIssue:", updateIssue);
-      Issue.findByIdAndUpdate(body._id, updateIssue, (error, result) => {
-        if (error) console.log(error);
-        else {
-          console.log("Updated:", res);
-          console.log(`result: 'successfully updated'`, `'_id': ${req.body._id}`)
-          res.json({ result: 'successfully updated', '_id': req.body._id })
-        };
-      });
-      } else {
-        console.log('error: missing _id');
-        res.json({ error: 'missing _id' })
+        Object.keys(body).forEach((item) => {
+          if(body[item] == "" || item == '_id' ) {
+            throw("error: no update field(s) sent")
+          }
+        })
+        let updateIssue = {};
+        Object.keys(body).forEach(function(item) {
+          if (body[item]) {
+            updateIssue[item] = body[item];
+          }
+        });
+        updateIssue.open = body.open == "true";
+        updateIssue.updated_on = new Date();
+        console.log("updateIssue:", updateIssue);
+
+        Issue.findByIdAndUpdate(body._id, updateIssue, (error, result) => {
+          if (error) {
+            console.log(`error: could not update`, `_id': ${req.body._id}`);
+            res.json({ error: "could not update", _id: req.body._id });
+          } else {
+            console.log(
+              `result: 'successfully updated'`,
+              `'_id': ${req.body._id}`
+            );
+            res.json({ result: "successfully updated", _id: req.body._id });
+          }
+        });
+      }
+      catch (err) {
+        console.log(`error: ${err}`)
+        res.json({ error: err })
       }
     })
 
     // Delete issue
     .delete((req, res) => {
-      console.log("_____")
+      console.log("_____DELETE_____");
       console.log("delete", req.body);
       if (!req.body._id) {
         console.log("error: 'missing _id'");
@@ -114,8 +133,11 @@ module.exports = (app) => {
             console.log("error: 'missing _id'");
             res.json({ error: "missing _id" });
           } else {
-            console.log(`result: "successfully deleted"`, `"_id": ${req.body._id}`);
-            res.json({ result: "successfully deleted", "_id": req.body._id });
+            console.log(
+              `result: "successfully deleted"`,
+              `"_id": ${req.body._id}`
+            );
+            res.json({ result: "successfully deleted", _id: req.body._id });
           }
         });
       }
