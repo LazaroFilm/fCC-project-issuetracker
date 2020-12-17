@@ -2,8 +2,8 @@
 
 const mongoose = require("mongoose");
 const mongooseHidden = require("mongoose-hidden")({
-    defaultHidden: { __v: true, password: true },
-  });
+  defaultHidden: { __v: true, password: true },
+});
 
 // Create a Schema for issue
 const { Schema } = mongoose;
@@ -44,7 +44,7 @@ module.exports = (app) => {
 
     // POST submit issue:
     .post((req, res) => {
-            console.log("_____")
+      console.log("_____")
       let project = req.params.project;
       // console.log("post", req.params);
       // console.log("body", req.body);
@@ -75,10 +75,11 @@ module.exports = (app) => {
 
     // Update issue
     .put((req, res) => {
-            console.log("_____")
+      console.log("_____")
+      if (req.body._id) {
       const body = req.body;
       let updateIssue = {};
-      Object.keys(body).forEach(function (item) {
+      Object.keys(body).forEach(function(item) {
         if (body[item]) {
           updateIssue[item] = body[item];
         }
@@ -90,15 +91,19 @@ module.exports = (app) => {
         if (error) console.log(error);
         else {
           console.log("Updated:", res);
-          console.log(`result: 'successfully updated'`, `'_id': ${_id }`)
-          res.json({  result: 'successfully updated', '_id': req.body._id })
+          console.log(`result: 'successfully updated'`, `'_id': ${req.body._id}`)
+          res.json({ result: 'successfully updated', '_id': req.body._id })
         };
       });
+      } else {
+        console.log('error: missing _id');
+        res.json({ error: 'missing _id' })
+      }
     })
 
     // Delete issue
     .delete((req, res) => {
-            console.log("_____")
+      console.log("_____")
       console.log("delete", req.body);
       if (!req.body._id) {
         console.log("error: 'missing _id'");
