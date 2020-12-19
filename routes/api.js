@@ -5,9 +5,16 @@ const mongooseHidden = require("mongoose-hidden")({
   defaultHidden: { __v: true, password: true },
 });
 
-const verbose = !(!(process.env.VERBOSE === "true") || (process.env.NODE_ENV === "test"));
+const verbose = !(
+  !(process.env.VERBOSE === "true") || process.env.NODE_ENV === "test"
+);
 console.log("verbose:", verbose);
-console.log("testing:", (process.env.NODE_ENV === "test"));
+console.log("testing:", process.env.NODE_ENV === "test");
+const consoleLog = (...message) => {
+  !(process.env.VERBOSE === "true") || process.env.NODE_ENV === "test"
+    ? null
+    : console.log(...message);
+};
 
 // Create a Schema for issue
 const { Schema } = mongoose;
@@ -36,25 +43,25 @@ module.exports = (app) => {
 
     // GET issue:
     .get(async (req, res) => {
-      !verbose? null : console.log("_____GET_____");
-      !verbose? null : console.log("query:", req.query);
+      consoleLog("_____GET_____");
+      consoleLog("query:", req.query);
       let project = req.params.project;
-      !verbose? null : console.log("get", req.params);
-      // !verbose? null : console.log({ project: project, ...req.query })
+      consoleLog("get", req.params);
+      // consoleLog({ project: project, ...req.query })
       const projectIssues = await Issue.find({
         project: project,
         ...req.query,
       });
-      !verbose? null : console.log("projectIssues:", projectIssues);
+      consoleLog("projectIssues:", projectIssues);
       res.json(projectIssues);
     })
 
     // POST submit issue:
     .post((req, res) => {
-      !verbose? null : console.log("_____POST_____");
+      consoleLog("_____POST_____");
       let project = req.params.project;
-      // !verbose? null : console.log("post", req.params);
-      // !verbose? null : console.log("body", req.body);
+      // consoleLog("post", req.params);
+      // consoleLog("body", req.body);
       const newIssue = {
         project,
         open: true,
@@ -69,12 +76,12 @@ module.exports = (app) => {
       const issue = new Issue(newIssue);
       issue.save((error, result) => {
         if (error) {
-          !verbose? null : console.log("error: required field(s) missing");
+          consoleLog("error: required field(s) missing");
           res.json({ error: "required field(s) missing" });
         } else {
           let saved = result;
           delete saved["__v"];
-          !verbose? null : console.log("save:", saved);
+          consoleLog("save:", saved);
           res.json(result);
         }
       });
@@ -82,81 +89,81 @@ module.exports = (app) => {
 
     // Update issue
     .put((req, res) => {
-      !verbose? null : console.log("_____PUT_____");
+      consoleLog("_____PUT_____");
       try {
         const body = req.body;
-        !verbose? null : console.log("body:", body)
+        consoleLog("body:", body);
         if (!req.body._id) {
-          throw ({ error: "missing _id" });
+          throw { error: "missing _id" };
         }
-
         const allBlank = Object.keys(body).every((k) => {
-          // !verbose? null : console.log("K:", k)
-          return (body[k] === "" || k == "_id");
+          // consoleLog("K:", k)
+          return body[k] === "" || k == "_id";
         });
         if (allBlank) {
-          throw ({ error: "no update field(s) sent", _id: body._id })
+          throw { error: "no update field(s) sent", _id: body._id };
         }
-
         let updateIssue = {};
-        Object.keys(body).forEach(function(item) {
+        Object.keys(body).forEach(function (item) {
           if (body[item]) {
             updateIssue[item] = body[item];
           }
         });
         updateIssue.open = body.open == "true";
         updateIssue.updated_on = new Date();
-        !verbose? null : console.log("updateIssue:", updateIssue);
-
+        consoleLog("updateIssue:", updateIssue);
         Issue.findByIdAndUpdate(body._id, updateIssue, (error, result) => {
           try {
             if (error) {
-              throw ({ error: "could not update", _id: body.id })
+              throw { error: "could not update", _id: body.id };
             }
-            !verbose? null : console.log(
-              `result: 'successfully updated'`,
-              `'_id': ${body._id}`
-            );
-            res.json({ result: "successfully updated", _id: body._id });
+            const message = { result: "successfully updated", _id: body._id };
+            consoleLog("PUT:", message);
+            res.json(message);
+          } catch (err) {
+            consoleLog("error:", err);
+            res.json(err);
           }
-          catch (err) {
-            !verbose? null : console.log(`error: ${err.error}`, `_id: ${err._id}`)
-            res.json(err)
-          }
-
         });
-      }
-      catch (err) {
+      } catch (err) {
         if (err._id) {
-          !verbose? null : console.log(`error: ${err.error}`, `_id: ${err._id}`)
-          res.json(err)
+          consoleLog("error:", err);
+          res.json(err);
         } else {
-          !verbose? null : console.log(`error: ${err.error}`)
-          res.json(err)
+          consoleLog(err);
+          res.json(err);
         }
       }
     })
 
     // Delete issue
     .delete((req, res) => {
-      !verbose? null : console.log("_____DELETE_____");
-      !verbose? null : console.log("delete", req.body);
-      if (!req.body._id) {
-        !verbose? null : console.log("error: 'missing _id'");
-        res.json({ error: "missing _id" });
-      } else {
-        Issue.findByIdAndDelete(req.body._id, (err, result) => {
-          if (err) {
-            !verbose? null : console.log("error: 'missing _id'");
-            res.json({ error: "missing _id" });
-          } else {
-            !verbose? null : console.log(
-              `result: "successfully deleted"`,
-              `"_id": ${req.body._id}`
-            );
-            res.json({ result: "successfully deleted", _id: req.body._id });
-          }
-        });
+      consoleLog("_____DELETE_____");
+      consoleLog("delete", req.body);
+      try {
+        if (!req.body._id) {
+          throw { error: "missing _id" };
+        } else {
+          Issue.findByIdAndDelete(req.body._id, (err, result) => {
+            try {
+              if (err) {
+                throw { error: "could not delete", _id: req.body._id };
+              } else {
+                consoleLog({
+                  result: "successfully deleted",
+                  _id: req.body._id,
+                });
+                res.json({ result: "successfully deleted", _id: req.body._id });
+              }
+            } catch (err) {
+              consoleLog("error:", err);
+              res.json(err);
+            }
+          });
+        }
+      } catch (err) {
+        consoleLog("error:", err);
+        res.json(err);
       }
     });
 };
