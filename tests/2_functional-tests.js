@@ -22,9 +22,7 @@ suite("Functional Tests", () => {
           status_text: "We're on it",
         })
         .end((err, res) => {
-          // console.log("res:", res.body);
           _id = res.body._id;
-          // console.log(("id:", _id))
           assert.equal(res.status, 200);
           assert.hasAllKeys(
             res.body,
@@ -60,7 +58,6 @@ suite("Functional Tests", () => {
           created_by: "Other Chai Test",
         })
         .end((err, res) => {
-          // console.log("res:", res.body);
           assert.equal(res.status, 200);
           assert.hasAllKeys(
             res.body,
@@ -95,9 +92,7 @@ suite("Functional Tests", () => {
           issue_text: "This should throw an error",
         })
         .end((err, res) => {
-          // console.log("res:", res.body);
           assert.equal(res.status, 200);
-          // assert.throws(error, 'required field(s) missing')
           assert.equal(res.body.error, "required field(s) missing");
           done();
         });
@@ -110,7 +105,6 @@ suite("Functional Tests", () => {
         .request(server)
         .get(url)
         .end((err, res) => {
-          // console.log("body:", res.body)
           assert.isArray(res.body, "body is an array");
           assert.isObject(res.body[0], "body contains an object");
           done();
@@ -122,7 +116,6 @@ suite("Functional Tests", () => {
         .get(url)
         .query({ created_by: "Chai Test" })
         .end((err, res) => {
-          // console.log(res.body)
           assert.isArray(res.body, "body is an array");
           assert.isObject(res.body[0], "body contains an object");
           for (const issue of res.body) {
@@ -140,11 +133,9 @@ suite("Functional Tests", () => {
           issue_text: "Oh crud",
         })
         .end((err, res) => {
-          // console.log(res.body)
           assert.isArray(res.body, "body is an array");
           assert.isObject(res.body[0], "body contains an object");
           for (const issue of res.body) {
-            // console.log("issue:", issue)
             assert.include(issue, { created_by: "Other Chai Test" });
             assert.include(issue, { issue_text: "Oh crud" });
           }
@@ -155,7 +146,6 @@ suite("Functional Tests", () => {
 
   suite("PUT requests", () => {
     test("Update one field on an issue", (done) => {
-      // console.log("id:", _id)
       chai
         .request(server)
         .put(url)
@@ -165,7 +155,6 @@ suite("Functional Tests", () => {
           status_text: "This should throw an error",
         })
         .end((err, res) => {
-          // console.log(res.body);
           assert.deepEqual(res.body, {
             result: "successfully updated",
             _id: _id,
@@ -174,7 +163,6 @@ suite("Functional Tests", () => {
         });
     });
     test("Update multiple fields on an issue", (done) => {
-      // console.log("id:", _id)
       chai
         .request(server)
         .put(url)
@@ -185,7 +173,6 @@ suite("Functional Tests", () => {
           open: false,
         })
         .end((err, res) => {
-          // console.log(res.body);
           assert.deepEqual(res.body, {
             result: "successfully updated",
             _id: _id,
@@ -194,7 +181,6 @@ suite("Functional Tests", () => {
         });
     });
     test("Update an issue with missing _id", (done) => {
-      // console.log("id:", _id)
       chai
         .request(server)
         .put(url)
@@ -204,13 +190,11 @@ suite("Functional Tests", () => {
           open: false,
         })
         .end((err, res) => {
-          // console.log(res.body);
           assert.deepEqual(res.body, { error: "missing _id" });
           done();
         });
     });
     test("Update an issue with no fields to update", (done) => {
-      // console.log("id:", _id)
       chai
         .request(server)
         .put(url)
@@ -218,7 +202,6 @@ suite("Functional Tests", () => {
           _id: _id,
         })
         .end((err, res) => {
-          // console.log(res.body);
           assert.deepEqual(res.body, {
             error: "no update field(s) sent",
             _id: _id,
@@ -227,17 +210,15 @@ suite("Functional Tests", () => {
         });
     });
     test("Update an issue with an invalid _id", (done) => {
-      // console.log("id:", _id)
       chai
         .request(server)
         .put(url)
         .send({
-          _id: "1234abcd",
+          _id: "5f665eb46e296f6b9b6a504d",
           open: false,
         })
         .end((err, res) => {
-          // console.log(res.body);
-          assert.deepEqual(res.body, { error: "could not update" });
+          assert.deepEqual(res.body, { error: "could not update" , _id: "5f665eb46e296f6b9b6a504d"});
           done();
         });
     });
@@ -252,12 +233,7 @@ suite("Functional Tests", () => {
           _id: _id,
         })
         .end((err, res) => {
-          // console.log(res.body)
           assert.deepEqual(res.body, { result: 'successfully deleted', _id: _id })
-          // for (const issue of res.body) {
-          //   // console.log("issue:", issue);
-          //   assert.notInclude(issue, { _id: _id });
-          // }
           done();
         });
     });
@@ -266,11 +242,10 @@ suite("Functional Tests", () => {
         .request(server)
         .delete(url)
         .send({
-          _id: "1234abcd",
+          _id: "5f665eb46e296f6b9b6a504d",
         })
         .end((err, res) => {
-          // console.log(res.body)
-          assert.deepEqual(res.body, { error: 'could not delete', '_id': "1234abcd" })
+          assert.deepEqual(res.body, { error: 'could not delete', '_id': "5f665eb46e296f6b9b6a504d" })
           done();
         });
     });
@@ -279,28 +254,9 @@ suite("Functional Tests", () => {
         .request(server)
         .delete(url)
         .end((err, res) => {
-          // console.log(res.body)
           assert.deepEqual(res.body, { error: 'missing _id' })
           done();
         });
     });
   });
 });
-
-// Create an issue with every field: POST request to /api/issues/{project} OK
-// Create an issue with only required fields: POST request to /api/issues/{project} OK
-// Create an issue with missing required fields: POST request to /api/issues/{project} OK
-
-// View issues on a project: GET request to /api/issues/{project} OK
-// View issues on a project with one filter: GET request to /api/issues/{project} OK
-// View issues on a project with multiple filters: GET request to /api/issues/{project} OK
-
-// Update one field on an issue: PUT request to /api/issues/{project} OK
-// Update multiple fields on an issue: PUT request to /api/issues/{project} OK
-// Update an issue with missing _id: PUT request to /api/issues/{project} OK
-// Update an issue with no fields to update: PUT request to /api/issues/{project} OK
-// Update an issue with an invalid _id: PUT request to /api/issues/{project} OK
-
-// Delete an issue: DELETE request to /api/issues/{project} OK
-// Delete an issue with an invalid _id: DELETE request to /api/issues/{project} OK
-// Delete an issue with missing _id: DELETE request to /api/issues/{project} OK
